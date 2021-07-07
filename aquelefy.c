@@ -6,6 +6,8 @@
 
 void register_music();
 void show_musics();
+void search_music();
+void total_time_songs();
 
 typedef struct song{
     int ID;
@@ -29,6 +31,12 @@ int main(){
         break;
     case 2:
         show_musics();
+        break;
+    case 3:
+        search_musics();
+        break;
+    case 4:
+        total_time_songs();
         break;
 
     default:
@@ -115,14 +123,77 @@ void show_musics(){
             if (ferror(archive)){
                 printf("\n Erro ao mostrar musicas");
             }else{
+                //impedir de mostrar o ultimo elemento duas vezes
                 if(control != 0){
                     printf("\n%s", song.music_name);
                     printf("\n%s", song.music_artist);
                     printf("\n%s", song.music_style);
-                    printf("\n%d", song.song_duration);
+                    printf("\n%d\n", song.song_duration);
                 }
             }
         }
     }
 
+}
+
+void search_musics(){
+    FILE *archive;
+    int ID;
+    Song song;
+
+    archive = fopen("songs","a+b");
+    if (archive==NULL){
+        printf("\nErro ao encontrar musicas");
+    }else{
+        printf("\nQual ID da musica que deseja: ");
+        scanf("%d%*c", &ID);
+
+        while(!feof(archive)){
+            fread(&song, sizeof(Song), 1, archive);
+
+            if (ferror(archive)){
+                printf("\nErro ao acessar musicas");
+            }else{
+                if (song.ID==ID){
+                    printf("\n%s", song.music_name);
+                    printf("\n%s", song.music_artist);
+                    printf("\n%s", song.music_style);
+                    printf("\n%d\n", song.song_duration);
+                    return;
+                }
+                
+            }
+            
+        }
+
+
+    }
+}
+
+void total_time_songs(){
+    FILE *archive;
+    Song song;
+    int total_time = 0;
+    int control;
+
+    archive = fopen("songs","a+b");
+    if (archive == NULL){
+        printf("\nErro ao recuperar musicas");
+    }else{
+        while (!feof(archive)){
+            control = fread(&song, sizeof(Song), 1, archive);
+
+            if(ferror(archive)){
+                printf("\nErro ao acessar as musicas");
+            }else{
+                //impedir de somar o valor da ultima musica duas vezes
+                if(control != 0){
+                    total_time+=song.song_duration;
+                } 
+            }
+        } 
+    }
+
+    printf("\nTempo total das musicas é: %d", total_time);
+    
 }
