@@ -10,8 +10,10 @@ void show_musics();
 void search_music();
 void total_time_songs();
 void longer_time();
-void shorter_time();
-
+int record_counter();
+int random();
+void clean_stdin();
+void clear();
 
 typedef struct song{
     int ID;
@@ -26,34 +28,44 @@ typedef struct song{
 int main(){
     setlocale(LC_ALL,"Portuguese");
     int option; 
-
-    scanf("%d%*c", &option);
-    switch (option)
-    {
-    case 1:
-        register_music();
-        break;
-    case 2:
-        show_musics();
-        break;
-    case 3:
-        search_musics();
-        break;
-    case 4:
-        total_time_songs();
-        break;
-    case 5:
-        longer_time();
-        break;
-    case 6:
-        
-        break;
-
-
-    default:
-        break;
-    }
-
+    do{
+    clear();
+    printf("---------MENU------------\n");
+    printf("1-Inserir musicas\n"
+          "2-Mostrar musicas\n"
+          "3-Procurar musicas\n"
+          "4-Tempo total das musicas\n"
+          "5-Maior e menor musicas\n"
+          "0-Encerrar programa\n");
+    
+        printf("\nDigite sua escolha: ");
+        scanf("%d%*c", &option);
+        switch (option)
+        {
+        case 1:
+            register_music();
+            break;
+        case 2:
+            show_musics();
+            break;
+        case 3:
+            search_musics();
+            break;
+        case 4:
+            total_time_songs();
+            break;
+        case 5:
+            longer_time();
+            break;
+        case 0:
+            exit(1);
+            break;
+        default:
+            printf("digite um opção válida");
+            break;
+        }
+    }while(option != 0);
+    
 
     //printf("\nDigite enter para sair");
     //getchar();
@@ -63,8 +75,8 @@ int main(){
 
 void register_music(){
     FILE *archive;
-    int number_recordes;
-
+    int number_records;
+    int records = record_counter();
     Song song;
 
     /*a+ abre o arquivo para leitura e para adicionar novos caracteres. Se não existe o arquivo é criado. Se existe ele é aberto para adição de caracteres no fim*/
@@ -73,16 +85,21 @@ void register_music(){
         printf("\nErro ao abrir o arquivo");
     }else{
         do{
-            printf("\nDigite a quantidade de músicas que deseja cadastrar");
+            printf("\nDigite a quantidade de músicas que deseja cadastrar: ");
             //lendo e limpando o buffer
-            scanf("%d%*c", &number_recordes);
-        }while(number_recordes > MAX || number_recordes <= 0); 
+            scanf("%d%*c", &number_records);
+           if(MAX-(number_records+records)<0){
+                printf("\nVocê não pode gravar %d musicas, pois ultrapassaria o limite máximo", number_records);
+                printf("\nVocê pode gravar mais %d musicas", MAX-records);
+            }
+            
+        }while(number_records > MAX || number_records <= 0 || number_records+records>MAX); 
 
-        for (int i = 0; i < number_recordes; i++){
+        for (int i = 0; i < number_records; i++){
             printf("\nCADASTRO DA %d MÚSICA", i+1);
 
-            song.ID = i;
-
+            song.ID = random();
+            
             printf("\nNome da música: ");
             fgets(song.music_name,TAMANHO, stdin);
             song.music_name[strcspn(song.music_name,"\n")] = '\0';
@@ -115,17 +132,13 @@ void register_music(){
             }else{
                  printf("\n%s gravada com sucesso!",song.music_name);
             }
-
         }
         
         if(!fclose(archive)){
-            printf("\nTudo certo");
+            printf("\nTudo certo.Você tem %d espaços", MAX-(record_counter()));
         }else{
             printf("\nAlgo de errado aconteceu ao fechar o arquivo");
         }
-
-        
-
     }
 }
 
@@ -146,6 +159,7 @@ void show_musics(){
             }else{
                 //impedir de mostrar o ultimo elemento duas vezes
                 if(control != 0){
+                    printf("\n%d", song.ID);
                     printf("\n%s", song.music_name);
                     printf("\n%s", song.music_artist);
                     printf("\n%s", song.music_style);
@@ -155,11 +169,12 @@ void show_musics(){
         }
     }
 
-    if(!fclose(archive)){
-            printf("\nTudo certo");
-    }else{
+    if(fclose(archive)){
         printf("\nAlgo de errado aconteceu ao fechar o arquivo");
     }
+
+    printf("Pressione Enter para voltar");
+    getchar();
 
 }
 
@@ -188,15 +203,11 @@ void search_musics(){
                     printf("\n%d\n", song.song_duration);
                     return;
                 }
-                
             }
-            
         }
     }
 
-    if(!fclose(archive)){
-        printf("\nTudo certo");
-    }else{
+    if(fclose(archive)){
         printf("\nAlgo de errado aconteceu ao fechar o arquivo");
     }
 }
@@ -227,9 +238,7 @@ void total_time_songs(){
 
     printf("\nTempo total das musicas é: %d", total_time);
 
-    if(!fclose(archive)){
-        printf("\nTudo certo");
-    }else{
+    if(fclose(archive)){
         printf("\nAlgo de errado aconteceu ao fechar o arquivo");
     }
     
@@ -270,13 +279,48 @@ void longer_time(){
     printf("\n%s tem a menor duração %d",small.music_name,small.song_duration);
     printf("\n%s tem a maior duração %d",large.music_name,large.song_duration);
 
-    if(!fclose(archive)){
-        printf("\nTudo certo");
-    }else{
+    if(fclose(archive)){
         printf("\nAlgo de errado aconteceu ao fechar o arquivo");
     }
 
     
+}
+
+int record_counter(){
+    int records = 0;
+    FILE *archive;
+    Song song;
+    int control;
+
+    archive = fopen("songs","a+b");
+    if(archive==NULL){
+        printf("\nErro ao recuperar musicas");
+    }else{
+        while(!feof(archive)){
+            control=fread(&song, sizeof(Song),1,archive);
+            if (ferror(archive)){
+                printf("\nNão foi possível ler");
+            }else{
+                if(control != 0){
+                    records++;
+                }
+                
+            } 
+        }
+    }
+    if(fclose(archive)){
+        printf("\nAlgo de errado aconteceu ao fechar o arquivo");
+    }
+    return records;
+}
+
+int random(){
+    int random = 0;
+
+    srand(time(NULL));
+    random = rand()%10;
+
+    return random;
 }
 
 
@@ -287,8 +331,12 @@ void clean_stdin(){
   }while (c != '\n' && c != EOF);
 }
 
-void scopy(char *t, char *s){
-    int i = 0;
+void clear(){
+  #if defined(__linux__)||defined(__unix__)
+    system("clear");
+  #endif
 
-    while((*t++ = *s++)!='\0');
+  #if defined(__WIN32)||defined(__WIN64)
+    system("cls");
+  #endif
 }
