@@ -3,17 +3,21 @@
 #include <string.h>
 #include <locale.h>
 #define MAX 30
+#define TAMANHO 80
 
 void register_music();
 void show_musics();
 void search_music();
 void total_time_songs();
+void longer_time();
+void shorter_time();
+
 
 typedef struct song{
     int ID;
-    char music_name[80];
-    char music_artist[80];
-    char music_style[80];
+    char music_name[TAMANHO];
+    char music_artist[TAMANHO];
+    char music_style[TAMANHO];
     int song_duration;
     //char registration_data;
 
@@ -38,6 +42,13 @@ int main(){
     case 4:
         total_time_songs();
         break;
+    case 5:
+        longer_time();
+        break;
+    case 6:
+        
+        break;
+
 
     default:
         break;
@@ -73,16 +84,26 @@ void register_music(){
             song.ID = i;
 
             printf("\nNome da música: ");
-            fgets(song.music_name,80, stdin);
-            song.music_name[strcspn(song.music_name,"\n")] = '\0'; 
+            fgets(song.music_name,TAMANHO, stdin);
+            song.music_name[strcspn(song.music_name,"\n")] = '\0';
+            //limpar o buffer de entrada e não deixar a string passar da quantidade de caracteres
+            if(strcspn(song.music_name, "\0") == (TAMANHO-1)){
+                clean_stdin();
+            }
 
             printf("\nNome do artista/banda: ");
-            fgets(song.music_artist,80, stdin);
-            song.music_artist[strcspn(song.music_artist,"\n")] = '\0'; 
+            fgets(song.music_artist,TAMANHO, stdin);
+            song.music_artist[strcspn(song.music_artist,"\n")] = '\0';
+            if(strcspn(song.music_artist, "\0") == (TAMANHO-1)){
+                clean_stdin();
+            } 
 
             printf("\nEstilo da música: ");
-            fgets(song.music_style,80, stdin);
+            fgets(song.music_style,TAMANHO, stdin);
             song.music_style[strcspn(song.music_style,"\n")] = '\0'; 
+            if(strcspn(song.music_style, "\0") == (TAMANHO-1)){
+                clean_stdin();
+            }
 
             printf("\nTempo da música em segundos: ");
             scanf("%d%*c", &song.song_duration);
@@ -134,6 +155,12 @@ void show_musics(){
         }
     }
 
+    if(!fclose(archive)){
+            printf("\nTudo certo");
+    }else{
+        printf("\nAlgo de errado aconteceu ao fechar o arquivo");
+    }
+
 }
 
 void search_musics(){
@@ -165,8 +192,12 @@ void search_musics(){
             }
             
         }
+    }
 
-
+    if(!fclose(archive)){
+        printf("\nTudo certo");
+    }else{
+        printf("\nAlgo de errado aconteceu ao fechar o arquivo");
     }
 }
 
@@ -195,5 +226,67 @@ void total_time_songs(){
     }
 
     printf("\nTempo total das musicas é: %d", total_time);
+
+    if(!fclose(archive)){
+        printf("\nTudo certo");
+    }else{
+        printf("\nAlgo de errado aconteceu ao fechar o arquivo");
+    }
     
+}
+
+void longer_time(){
+    FILE *archive;
+    int smaller = 0, larger = 0;
+    int control;
+    char name_smaller[TAMANHO], name_larger[TAMANHO];
+    Song song;
+
+    archive = fopen("songs","a+b");
+    if(archive == NULL){
+        printf("\nErro ao recuperar músicas");
+    }else{
+        while(!feof(archive)){
+            control = fread(&song, sizeof(Song), 1, archive);
+
+            if(ferror(archive)){
+                printf("\nErro ao acessar a música");
+            }else{
+                if(control != 0){
+                    if(song.song_duration>larger){
+                        larger = song.song_duration;
+                        scopy(name_larger,song.music_name);
+                    }else if (song.song_duration<smaller){
+                        smaller = song.song_duration;
+                        scopy(name_smaller,song.music_name);
+                    }
+                }
+            }
+        }
+    }
+
+    printf("\n%s tem a menor duração %d",name_smaller,smaller);
+    printf("\n%s tem a maior duração %d",name_larger,larger);
+
+    if(!fclose(archive)){
+        printf("\nTudo certo");
+    }else{
+        printf("\nAlgo de errado aconteceu ao fechar o arquivo");
+    }
+
+    
+}
+
+
+void clean_stdin(){
+  int c;
+  do{
+    c = getchar();
+  }while (c != '\n' && c != EOF);
+}
+
+void scopy(char *t, char *s){
+    int i = 0;
+
+    while((*t++ = *s++)!='\0');
 }
