@@ -240,11 +240,7 @@ void total_time_songs(){
         }
 
         while ((fread(&song, sizeof(Song), 1, archive))==1){
-            if(ferror(archive)){
-                printf("\nErro ao acessar as musicas");
-            }else{
-                total_time+=song.song_duration;
-            }
+            total_time+=song.song_duration;
         } 
     }
 
