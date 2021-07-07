@@ -237,36 +237,38 @@ void total_time_songs(){
 
 void longer_time(){
     FILE *archive;
-    int smaller = 0, larger = 0;
+    //int smaller = 0, larger = 0;
     int control;
     char name_smaller[TAMANHO], name_larger[TAMANHO];
-    Song song;
+    Song song, small, large;
 
     archive = fopen("songs","a+b");
     if(archive == NULL){
         printf("\nErro ao recuperar músicas");
     }else{
+        fread(&song, sizeof(Song), 1, archive);
+        small = song;
+        large = song;
+        //rewind(archive);
+
         while(!feof(archive)){
             control = fread(&song, sizeof(Song), 1, archive);
-
             if(ferror(archive)){
                 printf("\nErro ao acessar a música");
             }else{
                 if(control != 0){
-                    if(song.song_duration>larger){
-                        larger = song.song_duration;
-                        scopy(name_larger,song.music_name);
-                    }else if (song.song_duration<smaller){
-                        smaller = song.song_duration;
-                        scopy(name_smaller,song.music_name);
-                    }
+                    if(song.song_duration>large.song_duration){
+                        large = song;
+                    }else if (song.song_duration<small.song_duration){
+                        small = song;
+                    }         
                 }
             }
         }
     }
 
-    printf("\n%s tem a menor duração %d",name_smaller,smaller);
-    printf("\n%s tem a maior duração %d",name_larger,larger);
+    printf("\n%s tem a menor duração %d",small.music_name,small.song_duration);
+    printf("\n%s tem a maior duração %d",large.music_name,large.song_duration);
 
     if(!fclose(archive)){
         printf("\nTudo certo");
